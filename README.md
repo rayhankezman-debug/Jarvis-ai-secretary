@@ -42,11 +42,15 @@ JARVIS/
 │   ├── scheduler/       # APScheduler jobs
 │   ├── services/        # Business logic & tools
 │   ├── telegram/        # Telegram bot handlers
+│   │   ├── __init__.py
+│   │   ├── bot.py       # Bot application factory
+│   │   └── handlers.py  # Command & message handlers
 │   ├── __init__.py
-│   └── main.py          # FastAPI app factory
+│   └── main.py          # FastAPI app factory + bot lifecycle
 ├── tests/
 │   ├── conftest.py      # Shared test fixtures
-│   └── test_phase0.py   # Foundation tests
+│   ├── test_phase0.py   # Foundation tests
+│   └── test_phase1.py   # Telegram bot tests
 ├── .env.example         # Environment variable template
 ├── .gitignore
 ├── pytest.ini           # Test configuration
@@ -96,10 +100,18 @@ pytest -v
 | GET | `/health` | Application health check |
 | GET | `/docs` | Swagger UI (auto-generated) |
 
+## Bot Commands
+
+| Command | Description |
+|---------|-------------|
+| `/start` | Welcome message & bot introduction |
+| `/help` | List available commands |
+| `/ping` | Connectivity check (returns server time) |
+
 ## Development Phases
 
 - [x] **Phase 0** — Project Foundation
-- [ ] **Phase 1** — Telegram Bot Integration
+- [x] **Phase 1** — Telegram Bot Integration
 - [ ] **Phase 2** — Database (PostgreSQL + SQLAlchemy)
 - [ ] **Phase 3** — Gemini AI Integration
 - [ ] **Phase 4** — AI Tools (CRUD operations)
