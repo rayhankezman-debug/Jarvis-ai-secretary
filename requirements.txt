@@ -1,0 +1,30 @@
+# Web Framework
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+
+# Database
+sqlalchemy[asyncio]==2.0.41
+asyncpg==0.30.0
+alembic==1.16.1
+
+# Validation & Settings
+pydantic==2.11.3
+pydantic-settings==2.9.1
+
+# Telegram Bot
+python-telegram-bot==22.8
+
+# AI - Google Gemini
+google-genai==1.16.1
+
+# Scheduler
+apscheduler==3.11.0
+
+# Utilities
+python-dotenv==1.1.0
+pytz==2025.2
+
+# Testing
+pytest==8.4.0
+pytest-asyncio==0.26.0
+httpx==0.28.1
