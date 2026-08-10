@@ -27,18 +27,25 @@ AI Secretary understands natural language (including Bahasa Indonesia) and helps
 
 ```
 JARVIS/
+├── alembic/             # Database migrations (Alembic)
+│   ├── versions/        # Migration scripts
+│   └── env.py           # Async migration environment
 ├── app/
 │   ├── ai/              # LLM provider abstraction
 │   │   ├── __init__.py
 │   │   └── base.py      # Abstract LLM interface
 │   ├── api/             # FastAPI routes
 │   │   ├── __init__.py
-│   │   └── health.py    # Health check endpoint
+│   │   └── health.py    # Health check endpoint (+ DB status)
 │   ├── core/            # Configuration & logging
 │   │   ├── __init__.py
 │   │   ├── config.py    # Pydantic settings
 │   │   └── logging.py   # Structured logging
 │   ├── database/        # SQLAlchemy models & connection
+│   │   ├── __init__.py  # Public API exports
+│   │   ├── base.py      # Declarative base + TimestampMixin
+│   │   ├── models.py    # Task model + enums
+│   │   └── session.py   # Async engine & session factory
 │   ├── scheduler/       # APScheduler jobs
 │   ├── services/        # Business logic & tools
 │   ├── telegram/        # Telegram bot handlers
@@ -49,8 +56,10 @@ JARVIS/
 │   └── main.py          # FastAPI app factory + bot lifecycle
 ├── tests/
 │   ├── conftest.py      # Shared test fixtures
-│   ├── test_phase0.py   # Foundation tests
-│   └── test_phase1.py   # Telegram bot tests
+│   ├── test_phase0.py   # Foundation tests (9 tests)
+│   ├── test_phase1.py   # Telegram bot tests (15 tests)
+│   └── test_phase2.py   # Database tests (29 tests)
+├── alembic.ini          # Alembic configuration
 ├── .env.example         # Environment variable template
 ├── .gitignore
 ├── pytest.ini           # Test configuration
@@ -112,7 +121,7 @@ pytest -v
 
 - [x] **Phase 0** — Project Foundation
 - [x] **Phase 1** — Telegram Bot Integration
-- [ ] **Phase 2** — Database (PostgreSQL + SQLAlchemy)
+- [x] **Phase 2** — Database (PostgreSQL + SQLAlchemy)
 - [ ] **Phase 3** — Gemini AI Integration
 - [ ] **Phase 4** — AI Tools (CRUD operations)
 - [ ] **Phase 5** — Reminder Engine

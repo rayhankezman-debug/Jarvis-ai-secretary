@@ -28,10 +28,19 @@ async def health_check() -> dict:
     tz = pytz.timezone(settings.timezone)
     now = datetime.now(tz)
 
-    return {
+    health = {
         "status": "healthy",
         "environment": settings.app_env,
         "timezone": settings.timezone,
         "current_time": now.isoformat(),
         "version": "0.1.0",
     }
+
+    # Check database connectivity (non-blocking, doesn't fail the endpoint)
+    try:
+        from app.database.session import check_db_connection
+        health["database"] = "connected" if await check_db_connection() else "disconnected"
+    except Exception:
+        health["database"] = "unavailable"
+
+    return health
