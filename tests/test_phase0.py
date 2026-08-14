@@ -50,7 +50,7 @@ def test_settings_default_timezone():
 
 def test_settings_default_model():
     """Default Gemini model should be set."""
-    s = Settings()
+    s = Settings(_env_file=None)
     assert s.gemini_model == "gemini-2.0-flash"
 
 

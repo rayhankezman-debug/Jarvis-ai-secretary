@@ -208,7 +208,8 @@ async def test_ping_command_returns_pong(mock_update, mock_context):
 
 
 @pytest.mark.asyncio
-async def test_text_message_is_acknowledged(mock_update, mock_context):
+@patch("app.ai.get_llm_provider", return_value=None)
+async def test_text_message_is_acknowledged(mock_provider, mock_update, mock_context):
     """Regular text messages should be acknowledged."""
     mock_update.message.text = "Besok jam 8 kuliah"
 
@@ -225,7 +226,8 @@ async def test_text_message_is_acknowledged(mock_update, mock_context):
 
 
 @pytest.mark.asyncio
-async def test_text_message_truncates_long_input(mock_update, mock_context):
+@patch("app.ai.get_llm_provider", return_value=None)
+async def test_text_message_truncates_long_input(mock_provider, mock_update, mock_context):
     """Long messages should be truncated in the echo response."""
     mock_update.message.text = "A" * 500
 
@@ -238,7 +240,8 @@ async def test_text_message_truncates_long_input(mock_update, mock_context):
 
 
 @pytest.mark.asyncio
-async def test_text_message_escapes_html(mock_update, mock_context):
+@patch("app.ai.get_llm_provider", return_value=None)
+async def test_text_message_escapes_html(mock_provider, mock_update, mock_context):
     """HTML in user messages should be escaped to prevent injection."""
     mock_update.message.text = "<script>alert('xss')</script>"
 
