@@ -4,14 +4,14 @@ Telegram command and message handlers.
 Each handler is a simple async function that receives an Update and Context.
 Business logic should NOT live here — handlers are thin wrappers that:
 1. Extract data from the Telegram update
-2. Call a service/AI layer (future phases)
+2. Call a service/AI layer
 3. Send a response back to the user
 
-Current Phase 1 handlers:
+Handlers:
     /start  — Welcome message + bot introduction
     /help   — List available commands
     /ping   — Quick connectivity check (returns "pong")
-    text    — Catch-all for non-command messages (echo for now)
+    text    — Routes messages to AI for natural language response
 """
 
 import html
@@ -70,8 +70,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "💬 <b>Cara Pakai</b>\n\n"
         "Cukup kirim pesan biasa, misalnya:\n"
         '<i>"Besok jam 8 kuliah, jam 2 meeting, sore olahraga"</i>\n\n'
-        "Saya akan memahami dan membantu mengatur jadwal kamu.\n\n"
-        "⚠️ <i>Fitur AI belum aktif — akan tersedia di update mendatang.</i>"
+        "Saya akan memahami dan membantu mengatur jadwal kamu."
     )
 
     await update.message.reply_text(help_text, parse_mode="HTML")
@@ -100,17 +99,32 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     """
     Handle regular text messages (non-commands).
 
-    In Phase 1, this is a simple echo/acknowledgment.
-    In Phase 3+, this will route messages to the AI for intent
-    detection and task extraction.
+    Routes the message to the AI for a natural language response.
+    Falls back to a simple acknowledgment if AI is unavailable.
     """
     user = update.effective_user
     text = update.message.text
 
     logger.info(f"Message from user {user.id}: {text[:50]}...")
 
-    # Phase 1: Simple acknowledgment
-    # Phase 3+: This will call the AI service for intent detection
+    # Try to get an AI response
+    try:
+        from app.ai import get_llm_provider
+
+        provider = get_llm_provider()
+
+        if provider is not None:
+            # AI is available — generate response
+            ai_response = await provider.generate_text(text)
+            await update.message.reply_text(ai_response)
+            logger.info(f"AI response sent to user {user.id} ({len(ai_response)} chars)")
+            return
+
+    except Exception as e:
+        logger.error(f"AI response failed for user {user.id}: {e}")
+        # Fall through to fallback response
+
+    # Fallback: AI not configured or failed
     await update.message.reply_text(
         "📝 Pesan diterima!\n\n"
         f'Kamu mengirim: "<i>{html.escape(text[:200])}</i>"\n\n'
