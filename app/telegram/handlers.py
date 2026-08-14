@@ -99,15 +99,29 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     """
     Handle regular text messages (non-commands).
 
-    Routes the message to the AI for a natural language response.
-    Falls back to a simple acknowledgment if AI is unavailable.
+    Routes the message through the AI agent for tool-calling support.
+    Falls back to simple text generation if the agent is unavailable.
     """
     user = update.effective_user
     text = update.message.text
 
     logger.info(f"Message from user {user.id}: {text[:50]}...")
 
-    # Try to get an AI response
+    # Try AI agent first (Phase 4+ — with tool calling)
+    try:
+        from app.ai.agent import get_agent
+
+        agent = get_agent()
+        if agent is not None:
+            ai_response = await agent.process_message(text, telegram_user_id=user.id)
+            await update.message.reply_text(ai_response)
+            logger.info(f"Agent response sent to user {user.id} ({len(ai_response)} chars)")
+            return
+    except Exception as e:
+        logger.error(f"Agent failed for user {user.id}: {e}")
+        # Fall through to simple AI
+
+    # Fallback: simple AI text generation (Phase 3)
     try:
         from app.ai import get_llm_provider
 

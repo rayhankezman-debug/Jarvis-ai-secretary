@@ -31,9 +31,13 @@ JARVIS/
 │   ├── versions/        # Migration scripts
 │   └── env.py           # Async migration environment
 ├── app/
-│   ├── ai/              # LLM provider abstraction
+│   ├── ai/              # LLM provider abstraction + AI agent
 │   │   ├── __init__.py
-│   │   └── base.py      # Abstract LLM interface
+│   │   ├── base.py      # Abstract LLM interface
+│   │   ├── gemini.py    # Google Gemini implementation
+│   │   ├── prompts.py   # System prompts
+│   │   ├── agent.py     # AI agent with tool-calling (Phase 4)
+│   │   └── tools.py     # Gemini function declarations (Phase 4)
 │   ├── api/             # FastAPI routes
 │   │   ├── __init__.py
 │   │   └── health.py    # Health check endpoint (+ DB status)
@@ -48,17 +52,21 @@ JARVIS/
 │   │   └── session.py   # Async engine & session factory
 │   ├── scheduler/       # APScheduler jobs
 │   ├── services/        # Business logic & tools
+│   │   ├── __init__.py
+│   │   └── task_service.py  # Task CRUD scoped by user (Phase 4)
 │   ├── telegram/        # Telegram bot handlers
 │   │   ├── __init__.py
 │   │   ├── bot.py       # Bot application factory
-│   │   └── handlers.py  # Command & message handlers
+│   │   └── handlers.py  # Command & message handlers (agent routing)
 │   ├── __init__.py
 │   └── main.py          # FastAPI app factory + bot lifecycle
 ├── tests/
 │   ├── conftest.py      # Shared test fixtures
 │   ├── test_phase0.py   # Foundation tests (9 tests)
 │   ├── test_phase1.py   # Telegram bot tests (15 tests)
-│   └── test_phase2.py   # Database tests (29 tests)
+│   ├── test_phase2.py   # Database tests (29 tests)
+│   ├── test_phase3.py   # Gemini AI tests (26 tests)
+│   └── test_phase4.py   # AI agent + tools tests (61 tests)
 ├── alembic.ini          # Alembic configuration
 ├── .env.example         # Environment variable template
 ├── .gitignore
@@ -122,8 +130,8 @@ pytest -v
 - [x] **Phase 0** — Project Foundation
 - [x] **Phase 1** — Telegram Bot Integration
 - [x] **Phase 2** — Database (PostgreSQL + SQLAlchemy)
-- [ ] **Phase 3** — Gemini AI Integration
-- [ ] **Phase 4** — AI Tools (CRUD operations)
+- [x] **Phase 3** — Gemini AI Integration
+- [x] **Phase 4** — AI Agent Tools (task CRUD via function calling)
 - [ ] **Phase 5** — Reminder Engine
 - [ ] **Phase 6** — Daily Planner
 - [ ] **Phase 7** — Morning Brief

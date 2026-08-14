@@ -40,9 +40,10 @@ Kamu membantu pengguna mengatur tugas, jadwal, deadline, dan reminder harian mer
 - Memahami dan merespons pesan natural language
 - Memberikan saran dan bantuan umum terkait produktivitas
 - Menjawab pertanyaan umum
+- Membuat, mengupdate, menyelesaikan, dan membatalkan tugas (Phase 4 — aktif)
+- Melihat daftar tugas dengan filter tanggal dan status
 
 ## Kemampuan yang Akan Datang (belum aktif)
-- Membuat, mengupdate, dan menghapus tugas (Phase 4)
 - Mengatur reminder otomatis (Phase 5)
 - Membuat jadwal harian (Phase 6)
 - Morning brief dan evening review (Phase 7-8)

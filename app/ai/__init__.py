@@ -8,6 +8,8 @@ Public API:
     LLMInvalidResponseError — Invalid response exception
     GeminiProvider        — Google Gemini implementation
     get_llm_provider      — Factory function to get the configured provider
+    AgentService          — AI agent with tool-calling support (Phase 4)
+    get_agent             — Factory function to get the configured agent
 """
 
 from app.ai.base import (
@@ -17,6 +19,7 @@ from app.ai.base import (
     LLMRateLimitError,
 )
 from app.ai.gemini import GeminiProvider
+from app.ai.agent import AgentService, get_agent, reset_agent as reset_agent_fn
 from app.core.config import settings
 from app.core.logging import get_logger
 
@@ -75,4 +78,7 @@ __all__ = [
     "GeminiProvider",
     "get_llm_provider",
     "reset_provider",
+    "AgentService",
+    "get_agent",
+    "reset_agent_fn",
 ]
