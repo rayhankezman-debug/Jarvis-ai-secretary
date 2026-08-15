@@ -68,9 +68,31 @@ async def lifespan(app: FastAPI):
             "Set it in .env to enable the Telegram bot."
         )
 
+    # Start reminder scheduler (Phase 5)
+    scheduler_engine = None
+    try:
+        from app.scheduler.engine import SchedulerEngine, set_scheduler
+
+        scheduler_engine = SchedulerEngine(bot_application=_bot_application)
+        await scheduler_engine.start()
+        set_scheduler(scheduler_engine)
+        logger.info("Reminder scheduler started")
+    except Exception as e:
+        logger.error(f"Failed to start reminder scheduler: {e}")
+
     yield
 
     # --- Shutdown ---
+    # Stop scheduler first (it depends on the bot)
+    if scheduler_engine is not None:
+        try:
+            await scheduler_engine.stop()
+            from app.scheduler.engine import reset_scheduler
+            reset_scheduler()
+            logger.info("Reminder scheduler stopped")
+        except Exception as e:
+            logger.error(f"Error stopping scheduler: {e}")
+
     if _bot_application is not None:
         logger.info("Stopping Telegram bot...")
         try:
