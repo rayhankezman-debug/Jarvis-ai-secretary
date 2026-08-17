@@ -40,6 +40,16 @@ class Settings(BaseSettings):
         description="PostgreSQL connection string (async)",
     )
 
+    # --- Morning Brief (Phase 7) ---
+    morning_brief_time: str = Field(
+        default="07:00",
+        description="Time of day to send morning brief (HH:MM format)",
+    )
+    enable_morning_brief: bool = Field(
+        default=True,
+        description="Whether to enable automated morning brief delivery",
+    )
+
     # --- Timezone ---
     timezone: str = Field(
         default="Asia/Jakarta",

@@ -146,14 +146,19 @@ class GeminiProvider(LLMProvider):
         except Exception as e:
             _handle_gemini_error(e)
 
-    async def generate_text(self, prompt: str) -> str:
+    async def generate_text(
+        self,
+        prompt: str,
+        system_instruction: str | None = None,
+    ) -> str:
         """
         Generate a free-form text response from Gemini.
 
-        Used for conversational replies where structured output isn't needed.
+        Used for conversational replies, daily plan descriptions, morning briefs, etc.
 
         Args:
-            prompt: User message.
+            prompt: User message or prompt data.
+            system_instruction: Optional system instruction override.
 
         Returns:
             Generated text string.
@@ -163,8 +168,13 @@ class GeminiProvider(LLMProvider):
             LLMRateLimitError: When rate limited.
         """
         try:
+            sys_inst = (
+                system_instruction
+                if system_instruction is not None
+                else (get_system_prompt() + "\n\n" + CONVERSATIONAL_PROMPT)
+            )
             config = types.GenerateContentConfig(
-                system_instruction=get_system_prompt() + "\n\n" + CONVERSATIONAL_PROMPT,
+                system_instruction=sys_inst,
             )
 
             response = await self._client.aio.models.generate_content(

@@ -57,7 +57,8 @@ JARVIS/
 │   ├── services/        # Business logic & tools
 │   │   ├── __init__.py
 │   │   ├── task_service.py  # Task CRUD scoped by user (Phase 4)
-│   │   └── daily_plan_service.py  # Daily planner data layer (Phase 6)
+│   │   ├── daily_plan_service.py  # Daily planner data layer (Phase 6)
+│   │   └── morning_brief_service.py  # Proactive morning brief (Phase 7)
 │   ├── telegram/        # Telegram bot handlers
 │   │   ├── __init__.py
 │   │   ├── bot.py       # Bot application factory
@@ -72,7 +73,8 @@ JARVIS/
 │   ├── test_phase3.py   # Gemini AI tests (26 tests)
 │   ├── test_phase4.py   # AI agent + tools tests (61 tests)
 │   ├── test_phase5.py   # Reminder engine tests (46 tests)
-│   └── test_phase6.py   # Daily planner tests (39 tests)
+│   ├── test_phase6.py   # Daily planner tests (39 tests)
+│   └── test_phase7.py   # Morning brief tests (19 tests)
 ├── alembic.ini          # Alembic configuration
 ├── .env.example         # Environment variable template
 ├── .gitignore
@@ -140,7 +142,7 @@ pytest -v
 - [x] **Phase 4** — AI Agent Tools (task CRUD via function calling)
 - [x] **Phase 5** — Reminder Engine
 - [x] **Phase 6** — Daily Planner
-- [ ] **Phase 7** — Morning Brief
+- [x] **Phase 7** — Morning Brief
 - [ ] **Phase 8** — Evening Review
 - [ ] **Phase 9** — History & Statistics
 - [ ] **Phase 10** — Testing & Hardening

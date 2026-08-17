@@ -54,14 +54,19 @@ class LLMProvider(ABC):
         ...
 
     @abstractmethod
-    async def generate_text(self, prompt: str) -> str:
+    async def generate_text(
+        self,
+        prompt: str,
+        system_instruction: str | None = None,
+    ) -> str:
         """
         Generate a free-form text response.
 
-        Used for conversational replies, daily plan descriptions, etc.
+        Used for conversational replies, daily plan descriptions, morning briefs, etc.
 
         Args:
             prompt: The input prompt.
+            system_instruction: Optional system instruction override.
 
         Returns:
             Generated text string.
