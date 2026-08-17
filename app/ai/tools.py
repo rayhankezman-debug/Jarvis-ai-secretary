@@ -18,6 +18,7 @@ from google.genai import types
 
 from app.core.logging import get_logger
 from app.services.task_service import TaskService
+from app.services.daily_plan_service import DailyPlanService
 
 logger = get_logger(__name__)
 
@@ -169,6 +170,33 @@ TASK_TOOLS = types.Tool(
                 required=["task_id"],
             ),
         ),
+        types.FunctionDeclaration(
+            name="generate_daily_plan",
+            description=(
+                "Buat rencana/jadwal harian berdasarkan tugas pengguna. "
+                "Gunakan saat pengguna meminta jadwal, rencana, atau agenda harian. "
+                "Contoh: 'Jadwal hari ini', 'Buat jadwal besok', "
+                "'Apa agenda saya minggu depan?', 'Plan my day'. "
+                "JANGAN gunakan list_tasks untuk permintaan jadwal harian — "
+                "gunakan generate_daily_plan yang memberikan data terstruktur "
+                "termasuk tugas terjadwal, overdue, dan backlog."
+            ),
+            parameters=types.Schema(
+                type="OBJECT",
+                properties={
+                    "target_date": types.Schema(
+                        type="STRING",
+                        description=(
+                            "Tanggal yang diminta dalam format ISO 8601 "
+                            "(contoh: '2026-08-18'). "
+                            "Jika pengguna bilang 'hari ini', gunakan tanggal hari ini. "
+                            "Jika 'besok', gunakan tanggal besok. "
+                            "Jika tidak disebutkan, default ke hari ini."
+                        ),
+                    ),
+                },
+            ),
+        ),
     ]
 )
 
@@ -237,6 +265,12 @@ async def execute_tool(
             return await TaskService.cancel_task(
                 telegram_user_id=telegram_user_id,
                 task_id=int(tool_args.get("task_id", 0)),
+            )
+
+        elif tool_name == "generate_daily_plan":
+            return await DailyPlanService.get_daily_plan(
+                telegram_user_id=telegram_user_id,
+                target_date=tool_args.get("target_date"),
             )
 
         else:

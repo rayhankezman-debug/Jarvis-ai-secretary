@@ -51,7 +51,7 @@ def mock_db_session():
 
 class TestToolDefinitions:
     def test_task_tools_has_five_functions(self):
-        assert len(TASK_TOOLS.function_declarations) == 5
+        assert len(TASK_TOOLS.function_declarations) == 6
 
     def test_tool_names(self):
         names = [fd.name for fd in TASK_TOOLS.function_declarations]

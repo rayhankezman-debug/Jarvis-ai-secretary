@@ -42,10 +42,10 @@ Kamu membantu pengguna mengatur tugas, jadwal, deadline, dan reminder harian mer
 - Menjawab pertanyaan umum
 - Membuat, mengupdate, menyelesaikan, dan membatalkan tugas (Phase 4 — aktif)
 - Melihat daftar tugas dengan filter tanggal dan status
+- Mengatur reminder otomatis (Phase 5 — aktif)
+- Membuat jadwal/rencana harian berdasarkan tugas (Phase 6 — aktif)
 
 ## Kemampuan yang Akan Datang (belum aktif)
-- Mengatur reminder otomatis (Phase 5)
-- Membuat jadwal harian (Phase 6)
 - Morning brief dan evening review (Phase 7-8)
 
 ## Batasan

@@ -56,7 +56,8 @@ JARVIS/
 │   │   └── reminder_service.py  # Reminder logic + deduplication
 │   ├── services/        # Business logic & tools
 │   │   ├── __init__.py
-│   │   └── task_service.py  # Task CRUD scoped by user (Phase 4)
+│   │   ├── task_service.py  # Task CRUD scoped by user (Phase 4)
+│   │   └── daily_plan_service.py  # Daily planner data layer (Phase 6)
 │   ├── telegram/        # Telegram bot handlers
 │   │   ├── __init__.py
 │   │   ├── bot.py       # Bot application factory
@@ -70,7 +71,8 @@ JARVIS/
 │   ├── test_phase2.py   # Database tests (29 tests)
 │   ├── test_phase3.py   # Gemini AI tests (26 tests)
 │   ├── test_phase4.py   # AI agent + tools tests (61 tests)
-│   └── test_phase5.py   # Reminder engine tests (46 tests)
+│   ├── test_phase5.py   # Reminder engine tests (46 tests)
+│   └── test_phase6.py   # Daily planner tests (39 tests)
 ├── alembic.ini          # Alembic configuration
 ├── .env.example         # Environment variable template
 ├── .gitignore
@@ -137,7 +139,7 @@ pytest -v
 - [x] **Phase 3** — Gemini AI Integration
 - [x] **Phase 4** — AI Agent Tools (task CRUD via function calling)
 - [x] **Phase 5** — Reminder Engine
-- [ ] **Phase 6** — Daily Planner
+- [x] **Phase 6** — Daily Planner
 - [ ] **Phase 7** — Morning Brief
 - [ ] **Phase 8** — Evening Review
 - [ ] **Phase 9** — History & Statistics
