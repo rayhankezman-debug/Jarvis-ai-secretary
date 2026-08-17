@@ -50,6 +50,16 @@ class Settings(BaseSettings):
         description="Whether to enable automated morning brief delivery",
     )
 
+    # --- Evening Review (Phase 8) ---
+    evening_review_time: str = Field(
+        default="20:00",
+        description="Time of day to send evening review (HH:MM format)",
+    )
+    enable_evening_review: bool = Field(
+        default=True,
+        description="Whether to enable automated evening review delivery",
+    )
+
     # --- Timezone ---
     timezone: str = Field(
         default="Asia/Jakarta",

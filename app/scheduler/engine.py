@@ -5,12 +5,14 @@ This module provides:
 - SchedulerEngine: Manages APScheduler instance, job registration, lifecycle
 - _reminder_tick: The periodic job that checks and sends reminders
 - _morning_brief_tick: The daily Cron job that sends morning briefs (Phase 7)
+- _evening_review_tick: The daily Cron job that sends evening reviews (Phase 8)
 
 Architecture:
     FastAPI lifespan → SchedulerEngine.start()
         → APScheduler runs _reminder_tick every N minutes
         → APScheduler runs _morning_brief_tick at MORNING_BRIEF_TIME daily
-        → ReminderService & MorningBriefService dispatch notifications
+        → APScheduler runs _evening_review_tick at EVENING_REVIEW_TIME daily
+        → ReminderService, MorningBriefService & EveningReviewService dispatch notifications
         → Telegram bot sends messages
 
 APScheduler 3.x is used in async mode with AsyncIOScheduler.
@@ -24,6 +26,7 @@ from app.core.config import settings
 from app.core.logging import get_logger
 from app.scheduler.reminder_service import ReminderService
 from app.services.morning_brief_service import MorningBriefService
+from app.services.evening_review_service import EveningReviewService
 
 logger = get_logger(__name__)
 
@@ -73,6 +76,7 @@ class SchedulerEngine:
         self._check_interval = check_interval_minutes
         self._reminder_service = ReminderService()
         self._morning_brief_service = MorningBriefService()
+        self._evening_review_service = EveningReviewService()
         self._scheduler = AsyncIOScheduler(timezone=settings.timezone)
         self._running = False
 
@@ -90,6 +94,11 @@ class SchedulerEngine:
     def morning_brief_service(self) -> MorningBriefService:
         """Access the morning brief service (for testing)."""
         return self._morning_brief_service
+
+    @property
+    def evening_review_service(self) -> EveningReviewService:
+        """Access the evening review service (for testing)."""
+        return self._evening_review_service
 
     async def start(self) -> None:
         """
@@ -124,6 +133,25 @@ class SchedulerEngine:
             )
             logger.info(
                 f"Morning brief job registered at {hour:02d}:{minute:02d} "
+                f"({settings.timezone})"
+            )
+
+        # 3. Register daily evening review job if enabled (Phase 8)
+        if settings.enable_evening_review:
+            hour, minute = _parse_time(settings.evening_review_time)
+            self._scheduler.add_job(
+                self._evening_review_tick,
+                trigger=CronTrigger(
+                    hour=hour,
+                    minute=minute,
+                    timezone=settings.timezone,
+                ),
+                id="evening_review",
+                name="Generate and send daily evening review",
+                replace_existing=True,
+            )
+            logger.info(
+                f"Evening review job registered at {hour:02d}:{minute:02d} "
                 f"({settings.timezone})"
             )
 
@@ -184,6 +212,22 @@ class SchedulerEngine:
             )
         except Exception as e:
             logger.error(f"Morning brief tick failed: {e}")
+
+    async def _evening_review_tick(self) -> None:
+        """
+        Periodic Cron job: generate and send daily evening reviews.
+
+        This is called by APScheduler at EVENING_REVIEW_TIME.
+        """
+        try:
+            results = await self._evening_review_service.send_evening_reviews(
+                bot_application=self._bot
+            )
+            logger.info(
+                f"Evening review tick completed: {len(results)} review(s) processed"
+            )
+        except Exception as e:
+            logger.error(f"Evening review tick failed: {e}")
 
     async def _send_reminder(self, reminder) -> bool:
         """
@@ -251,6 +295,23 @@ class SchedulerEngine:
             List of status dicts for sent briefs.
         """
         return await self._morning_brief_service.send_morning_briefs(
+            bot_application=self._bot,
+            target_date=target_date,
+            target_user_ids=target_user_ids,
+        )
+
+    async def trigger_evening_review(
+        self,
+        target_date: str | None = None,
+        target_user_ids: list[int] | None = None,
+    ) -> list[dict]:
+        """
+        Manually trigger an evening review run. Useful for testing.
+
+        Returns:
+            List of status dicts for sent reviews.
+        """
+        return await self._evening_review_service.send_evening_reviews(
             bot_application=self._bot,
             target_date=target_date,
             target_user_ids=target_user_ids,
