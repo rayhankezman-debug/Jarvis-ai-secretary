@@ -95,6 +95,19 @@ async def ping_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     )
 
 
+MAX_TELEGRAM_MSG_LEN = 4000
+
+
+async def _reply_safe(message, text: str, **kwargs) -> None:
+    """Send text reply, splitting into multiple messages if over 4000 chars."""
+    if len(text) <= MAX_TELEGRAM_MSG_LEN:
+        await message.reply_text(text, **kwargs)
+    else:
+        for i in range(0, len(text), MAX_TELEGRAM_MSG_LEN):
+            chunk = text[i : i + MAX_TELEGRAM_MSG_LEN]
+            await message.reply_text(chunk, **kwargs)
+
+
 async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     Handle regular text messages (non-commands).
@@ -114,7 +127,7 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         agent = get_agent()
         if agent is not None:
             ai_response = await agent.process_message(text, telegram_user_id=user.id)
-            await update.message.reply_text(ai_response)
+            await _reply_safe(update.message, ai_response)
             logger.info(f"Agent response sent to user {user.id} ({len(ai_response)} chars)")
             return
     except Exception as e:
@@ -130,7 +143,7 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         if provider is not None:
             # AI is available — generate response
             ai_response = await provider.generate_text(text)
-            await update.message.reply_text(ai_response)
+            await _reply_safe(update.message, ai_response)
             logger.info(f"AI response sent to user {user.id} ({len(ai_response)} chars)")
             return
 

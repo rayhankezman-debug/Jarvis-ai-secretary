@@ -550,16 +550,11 @@ class TestPhase04Regression:
         reset_agent()
         assert app.ai.agent._agent_instance is None
 
-    def test_task_service_validates_empty_title(self):
-        """TaskService should reject empty titles (sync check)."""
-        import asyncio
+    @pytest.mark.asyncio
+    async def test_task_service_validates_empty_title(self):
+        """TaskService should reject empty titles."""
         from app.services.task_service import TaskService
-
-        async def _check():
-            result = await TaskService.create_task(
-                telegram_user_id=1, title=""
-            )
-            return result
-
-        result = asyncio.get_event_loop().run_until_complete(_check())
+        result = await TaskService.create_task(
+            telegram_user_id=1, title=""
+        )
         assert result["success"] is False

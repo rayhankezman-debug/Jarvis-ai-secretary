@@ -25,7 +25,7 @@ class SensitiveDataFilter(logging.Filter):
 
     # Patterns that look like API keys or tokens
     SENSITIVE_PATTERNS = [
-        re.compile(r"(AIza[0-9A-Za-z_-]{35})"),           # Google API key
+        re.compile(r"(AIza[0-9A-Za-z_-]{30,})"),           # Google API key
         re.compile(r"(\d+:[A-Za-z0-9_-]{35,})"),          # Telegram bot token
         re.compile(r"(postgresql\+asyncpg://[^\s]+)"),     # Database URL with password
     ]

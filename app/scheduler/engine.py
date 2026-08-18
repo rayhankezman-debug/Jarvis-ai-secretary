@@ -108,6 +108,10 @@ class SchedulerEngine:
             logger.warning("Scheduler already running")
             return
 
+        # If scheduler was stopped, recreate the instance
+        if self._scheduler.state == 2:  # STATE_STOPPED in APScheduler
+            self._scheduler = AsyncIOScheduler(timezone=settings.timezone)
+
         # 1. Register the periodic reminder check (Phase 5)
         self._scheduler.add_job(
             self._reminder_tick,
@@ -171,6 +175,7 @@ class SchedulerEngine:
 
         self._scheduler.shutdown(wait=False)
         self._running = False
+        self._scheduler = AsyncIOScheduler(timezone=settings.timezone)
         logger.info("Scheduler stopped")
 
     async def _reminder_tick(self) -> None:

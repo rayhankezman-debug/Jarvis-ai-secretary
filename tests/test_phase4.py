@@ -189,7 +189,7 @@ class TestTaskServiceValidation:
             @asynccontextmanager
             async def fake_session():
                 yield mock_session
-            mock_session_ctx.return_value = fake_session().__aenter__()
+            mock_session_ctx.side_effect = fake_session
 
             # We test the priority parsing logic directly
             from app.database.models import TaskPriority

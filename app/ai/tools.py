@@ -238,6 +238,14 @@ TASK_TOOLS = types.Tool(
 # Tool Execution
 # ──────────────────────────────────────────────
 
+def _safe_int(val, default: int = 0) -> int:
+    """Safely convert value to int without raising ValueError/TypeError."""
+    try:
+        return int(val)
+    except (ValueError, TypeError):
+        return default
+
+
 async def execute_tool(
     tool_name: str,
     tool_args: dict,
@@ -281,7 +289,7 @@ async def execute_tool(
         elif tool_name == "update_task":
             return await TaskService.update_task(
                 telegram_user_id=telegram_user_id,
-                task_id=int(tool_args.get("task_id", 0)),
+                task_id=_safe_int(tool_args.get("task_id")),
                 title=tool_args.get("title"),
                 description=tool_args.get("description"),
                 due_date=tool_args.get("due_date"),
@@ -291,13 +299,13 @@ async def execute_tool(
         elif tool_name == "complete_task":
             return await TaskService.complete_task(
                 telegram_user_id=telegram_user_id,
-                task_id=int(tool_args.get("task_id", 0)),
+                task_id=_safe_int(tool_args.get("task_id")),
             )
 
         elif tool_name == "cancel_task":
             return await TaskService.cancel_task(
                 telegram_user_id=telegram_user_id,
-                task_id=int(tool_args.get("task_id", 0)),
+                task_id=_safe_int(tool_args.get("task_id")),
             )
 
         elif tool_name == "generate_daily_plan":

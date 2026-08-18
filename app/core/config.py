@@ -12,7 +12,7 @@ Why Pydantic Settings?
 """
 
 from pydantic_settings import BaseSettings
-from pydantic import Field
+from pydantic import Field, field_validator
 
 
 class Settings(BaseSettings):
@@ -75,6 +75,38 @@ class Settings(BaseSettings):
         default="INFO",
         description="Logging level: DEBUG, INFO, WARNING, ERROR",
     )
+
+    @field_validator("timezone")
+    @classmethod
+    def validate_timezone(cls, v: str) -> str:
+        from zoneinfo import ZoneInfo
+        try:
+            ZoneInfo(v)
+        except Exception as e:
+            raise ValueError(f"Invalid timezone configuration '{v}': {e}")
+        return v
+
+    @field_validator("morning_brief_time", "evening_review_time")
+    @classmethod
+    def validate_time_format(cls, v: str) -> str:
+        try:
+            parts = v.strip().split(":")
+            if len(parts) != 2:
+                raise ValueError()
+            h, m = int(parts[0]), int(parts[1])
+            if not (0 <= h <= 23 and 0 <= m <= 59):
+                raise ValueError()
+        except Exception:
+            raise ValueError(f"Invalid time format '{v}'. Expected 'HH:MM' (00:00 - 23:59).")
+        return v
+
+    @field_validator("log_level")
+    @classmethod
+    def validate_log_level(cls, v: str) -> str:
+        valid_levels = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
+        if v.upper() not in valid_levels:
+            raise ValueError(f"Invalid log_level '{v}'. Must be one of {valid_levels}")
+        return v.upper()
 
     model_config = {
         "env_file": ".env",

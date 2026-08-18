@@ -145,7 +145,7 @@ pytest -v
 - [x] **Phase 7** — Morning Brief
 - [x] **Phase 8** — Evening Review
 - [x] **Phase 9** — History & Statistics
-- [ ] **Phase 10** — Testing & Hardening
+- [x] **Phase 10** — Testing & Hardening
 - [ ] **Phase 11** — Deployment
 
 ## Environment Variables
