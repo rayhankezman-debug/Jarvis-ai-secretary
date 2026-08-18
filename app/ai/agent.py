@@ -83,6 +83,7 @@ Berdasarkan waktu saat ini:
    - Tampilkan tugas backlog (tanpa deadline) sebagai saran tambahan
    - Prioritaskan tugas urgent/high di bagian atas
    - Berikan saran produktivitas jika ada waktu kosong
+10. Untuk permintaan statistik, history, completion rate, atau produktivitas (contoh: "Produktivitas saya minggu ini", "Berapa task selesai?"), HANYA gunakan get_productivity_statistics. JANGAN gunakan list_tasks.
 
 ## Aturan Komunikasi
 1. Jawab dengan bahasa yang sama dengan pengguna.

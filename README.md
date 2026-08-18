@@ -144,7 +144,7 @@ pytest -v
 - [x] **Phase 6** — Daily Planner
 - [x] **Phase 7** — Morning Brief
 - [x] **Phase 8** — Evening Review
-- [ ] **Phase 9** — History & Statistics
+- [x] **Phase 9** — History & Statistics
 - [ ] **Phase 10** — Testing & Hardening
 - [ ] **Phase 11** — Deployment
 

@@ -19,6 +19,7 @@ from google.genai import types
 from app.core.logging import get_logger
 from app.services.task_service import TaskService
 from app.services.daily_plan_service import DailyPlanService
+from app.services.history_service import HistoryService
 
 logger = get_logger(__name__)
 
@@ -197,6 +198,38 @@ TASK_TOOLS = types.Tool(
                 },
             ),
         ),
+        types.FunctionDeclaration(
+            name="get_productivity_statistics",
+            description=(
+                "Dapatkan statistik produktivitas dan history tugas pengguna. "
+                "Gunakan INI SAJA saat pengguna menanyakan statistik, produktivitas, "
+                "completion rate, atau performa mereka (misal: 'Bagaimana produktivitas "
+                "saya minggu ini?', 'Berapa task yang selesai bulan ini?'). "
+                "JANGAN gunakan untuk melihat daftar tugas biasa."
+            ),
+            parameters=types.Schema(
+                type="OBJECT",
+                properties={
+                    "start_date": types.Schema(
+                        type="STRING",
+                        description=(
+                            "Tanggal awal rentang waktu dalam format ISO 8601 "
+                            "(contoh: '2026-08-12'). "
+                            "Tentukan berdasarkan ucapan pengguna seperti 'minggu ini', "
+                            "'bulan lalu', dsb."
+                        ),
+                    ),
+                    "end_date": types.Schema(
+                        type="STRING",
+                        description=(
+                            "Tanggal akhir rentang waktu dalam format ISO 8601 "
+                            "(contoh: '2026-08-18'). "
+                            "Seringkali adalah hari ini jika rentangnya 'minggu ini'."
+                        ),
+                    ),
+                },
+            ),
+        ),
     ]
 )
 
@@ -271,6 +304,13 @@ async def execute_tool(
             return await DailyPlanService.get_daily_plan(
                 telegram_user_id=telegram_user_id,
                 target_date=tool_args.get("target_date"),
+            )
+
+        elif tool_name == "get_productivity_statistics":
+            return await HistoryService.get_statistics(
+                telegram_user_id=telegram_user_id,
+                start_date=tool_args.get("start_date"),
+                end_date=tool_args.get("end_date"),
             )
 
         else:

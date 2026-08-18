@@ -108,9 +108,9 @@ class TestDailyPlanToolDefinition:
         desc = fd.description.lower()
         assert "jadwal" in desc or "rencana" in desc
 
-    def test_total_tool_count_is_six(self):
-        """With Phase 6 we should have 6 tools total."""
-        assert len(TASK_TOOLS.function_declarations) == 6
+    def test_total_tool_count_is_seven(self):
+        """With Phase 9 we should have 7 tools total."""
+        assert len(TASK_TOOLS.function_declarations) == 7
 
 
 # ── Tool Execution Routing Tests ──────────────
