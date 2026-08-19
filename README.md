@@ -146,7 +146,59 @@ pytest -v
 - [x] **Phase 8** — Evening Review
 - [x] **Phase 9** — History & Statistics
 - [x] **Phase 10** — Testing & Hardening
-- [ ] **Phase 11** — Deployment
+- [x] **Phase 11** — Deployment
+
+## Production Deployment (Phase 11)
+
+This application is containerized and ready for production deployment using Docker and Docker Compose.
+
+### Prerequisites
+
+- Docker
+- Docker Compose
+
+### Environment Configuration
+
+Create a `.env` file from the example and configure your production secrets:
+
+```bash
+copy .env.example .env
+# Edit .env with production credentials
+```
+
+### Deploying
+
+1. Build and start the services in detached mode:
+
+```bash
+docker compose up -d --build
+```
+
+2. View logs to ensure a successful startup:
+
+```bash
+docker compose logs -f app
+```
+
+### Stopping and Updating
+
+To stop the application:
+
+```bash
+docker compose down
+```
+
+To update the application after a code change:
+
+```bash
+git pull
+docker compose up -d --build
+```
+
+### Database Persistence
+
+PostgreSQL data is stored in the `postgres_data` Docker volume. It will persist across container restarts and recreations.
+Database migrations are applied automatically on application startup via `scripts/start.sh`.
 
 ## Environment Variables
 
