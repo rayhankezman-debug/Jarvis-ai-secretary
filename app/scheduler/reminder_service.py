@@ -41,6 +41,8 @@ TZ = ZoneInfo(settings.timezone)
 
 class ReminderType(str, Enum):
     """Types of reminders that can be sent."""
+    H7 = "h7"            # 7 days before
+    H3 = "h3"            # 3 days before
     H1 = "h1"            # 1 day before (24h-18h before due)
     H0 = "h0"            # Same day morning (due date day)
     DUE_SOON = "due_soon" # 30 minutes before
@@ -195,6 +197,42 @@ class ReminderService:
                     f"📅 {due.strftime('%d %b %Y')} jam {due.strftime('%H:%M')} WIB\n\n"
                     f"Persiapkan dari sekarang 💪"
                 ))
+
+        # H-3: 3 days before (48-72 hours)
+        elif hours_until_due <= 72:
+            if not self.has_been_sent(task.id, ReminderType.H3):
+                created_at = getattr(task, "created_at", None)
+                if created_at is not None:
+                    if created_at.tzinfo is None:
+                        created_at = created_at.replace(tzinfo=TZ)
+                
+                # Check if created before H-3 window
+                if created_at is None or created_at <= due - timedelta(days=3):
+                    reminders.append(self._make_reminder(
+                        task, due, ReminderType.H3,
+                        f"📢 Reminder 3 hari lagi!\n\n"
+                        f"📋 *{task.title}*\n"
+                        f"📅 {due.strftime('%d %b %Y')} jam {due.strftime('%H:%M')} WIB\n\n"
+                        f"Persiapkan dari sekarang 💪"
+                    ))
+
+        # H-7: 7 days before (72-168 hours)
+        elif hours_until_due <= 168:
+            if not self.has_been_sent(task.id, ReminderType.H7):
+                created_at = getattr(task, "created_at", None)
+                if created_at is not None:
+                    if created_at.tzinfo is None:
+                        created_at = created_at.replace(tzinfo=TZ)
+                
+                # Check if created before H-7 window
+                if created_at is None or created_at <= due - timedelta(days=7):
+                    reminders.append(self._make_reminder(
+                        task, due, ReminderType.H7,
+                        f"📢 Reminder 7 hari lagi!\n\n"
+                        f"📋 *{task.title}*\n"
+                        f"📅 {due.strftime('%d %b %Y')} jam {due.strftime('%H:%M')} WIB\n\n"
+                        f"Persiapkan dari sekarang 💪"
+                    ))
 
         return reminders
 

@@ -45,6 +45,7 @@ def mock_task():
         title="Test Task",
         due_date=None,
         status_value="pending",
+        created_at=None,
     ):
         task = MagicMock()
         task.id = task_id
@@ -52,6 +53,10 @@ def mock_task():
         task.title = title
         task.due_date = due_date
         task.status = MagicMock(value=status_value)
+        if created_at is None:
+            task.created_at = datetime.now(TZ) - timedelta(days=30)
+        else:
+            task.created_at = created_at
         return task
     return _make
 
@@ -59,6 +64,12 @@ def mock_task():
 # ── ReminderType Enum Tests ───────────────────
 
 class TestReminderType:
+    def test_h7_value(self):
+        assert ReminderType.H7.value == "h7"
+
+    def test_h3_value(self):
+        assert ReminderType.H3.value == "h3"
+
     def test_h1_value(self):
         assert ReminderType.H1.value == "h1"
 
@@ -176,12 +187,56 @@ class TestReminderServiceEvaluate:
         assert reminders[0].reminder_type == ReminderType.OVERDUE
 
     def test_no_reminder_far_future(self, reminder_service, mock_task):
-        """Task due in 3 days should not trigger any reminder."""
+        """Task due in 10 days should not trigger any reminder."""
         now = datetime.now(TZ)
-        due = now + timedelta(days=3)
+        due = now + timedelta(days=10)
         task = mock_task(due_date=due)
 
         reminders = reminder_service._evaluate_task(task, now)
+        assert len(reminders) == 0
+
+    def test_h7_reminder_6days_before(self, reminder_service, mock_task):
+        """Task due in 6 days should trigger H-7 reminder."""
+        now = datetime.now(TZ)
+        due = now + timedelta(days=6)
+        task = mock_task(due_date=due)
+
+        reminders = reminder_service._evaluate_task(task, now)
+        assert len(reminders) == 1
+        assert reminders[0].reminder_type == ReminderType.H7
+
+    def test_h3_reminder_2days_before(self, reminder_service, mock_task):
+        """Task due in 2.5 days should trigger H-3 reminder."""
+        now = datetime.now(TZ)
+        due = now + timedelta(hours=60) # 2.5 days
+        task = mock_task(due_date=due)
+
+        reminders = reminder_service._evaluate_task(task, now)
+        assert len(reminders) == 1
+        assert reminders[0].reminder_type == ReminderType.H3
+
+    def test_retroactive_h7_skipped(self, reminder_service, mock_task):
+        """Task created after H-7 window should skip H-7 reminder."""
+        now = datetime.now(TZ)
+        due = now + timedelta(days=6)
+        # Created 5.5 days before due (after H-7 window)
+        created_at = due - timedelta(days=5, hours=12)
+        task = mock_task(due_date=due, created_at=created_at)
+
+        reminders = reminder_service._evaluate_task(task, now)
+        # Should be empty because it skips H-7 and it's too early for H-3
+        assert len(reminders) == 0
+
+    def test_retroactive_h3_skipped(self, reminder_service, mock_task):
+        """Task created after H-3 window should skip H-3 reminder."""
+        now = datetime.now(TZ)
+        due = now + timedelta(hours=60) # 2.5 days
+        # Created 2 days before due (after H-3 window)
+        created_at = due - timedelta(days=2)
+        task = mock_task(due_date=due, created_at=created_at)
+
+        reminders = reminder_service._evaluate_task(task, now)
+        # Should be empty because it skips H-3 and it's too early for H-1
         assert len(reminders) == 0
 
     def test_no_duplicate_after_mark_sent(self, reminder_service, mock_task):
@@ -248,6 +303,46 @@ class TestReminderServiceEvaluate:
         reminders = reminder_service._evaluate_task(task, now)
         assert len(reminders) == 1
         assert reminders[0].reminder_type == ReminderType.DUE_SOON
+
+    def test_due_soon_boundary_exactly_due(self, reminder_service, mock_task):
+        """Task exactly at due time (0 hours until due) should trigger DUE_SOON."""
+        now = datetime.now(TZ)
+        due = now
+        task = mock_task(due_date=due)
+
+        reminders = reminder_service._evaluate_task(task, now)
+        assert len(reminders) == 1
+        assert reminders[0].reminder_type == ReminderType.DUE_SOON
+
+    def test_overdue_boundary_just_past_due(self, reminder_service, mock_task):
+        """Task just past due (-0.01 hours) should trigger OVERDUE."""
+        now = datetime.now(TZ)
+        due = now - timedelta(seconds=1)
+        task = mock_task(due_date=due)
+
+        reminders = reminder_service._evaluate_task(task, now)
+        assert len(reminders) == 1
+        assert reminders[0].reminder_type == ReminderType.OVERDUE
+
+    def test_h7_boundary_exactly_168h(self, reminder_service, mock_task):
+        """Task due in exactly 168 hours is at the boundary — should trigger H-7."""
+        now = datetime.now(TZ)
+        due = now + timedelta(hours=168)
+        task = mock_task(due_date=due)
+
+        reminders = reminder_service._evaluate_task(task, now)
+        assert len(reminders) == 1
+        assert reminders[0].reminder_type == ReminderType.H7
+
+    def test_h3_boundary_exactly_72h(self, reminder_service, mock_task):
+        """Task due in exactly 72 hours is at the boundary — should trigger H-3."""
+        now = datetime.now(TZ)
+        due = now + timedelta(hours=72)
+        task = mock_task(due_date=due)
+
+        reminders = reminder_service._evaluate_task(task, now)
+        assert len(reminders) == 1
+        assert reminders[0].reminder_type == ReminderType.H3
 
     def test_naive_due_date_handled(self, reminder_service, mock_task):
         """Tasks with naive datetime due_date should still work."""
