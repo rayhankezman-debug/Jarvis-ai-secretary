@@ -53,10 +53,10 @@ def test_system_prompt_mentions_language_rules():
     assert "Bahasa Indonesia" in prompt
 
 
-def test_system_prompt_mentions_upcoming_features():
-    """System prompt should mention features that are coming soon."""
+def test_system_prompt_describes_conversational_mode():
+    """Fallback system prompt should describe conversational-only mode."""
     prompt = get_system_prompt()
-    assert "Phase 4" in prompt or "akan datang" in prompt.lower()
+    assert "Mode Percakapan" in prompt or "percakapan" in prompt.lower()
 
 
 def test_conversational_prompt_exists():

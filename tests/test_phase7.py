@@ -390,7 +390,7 @@ class TestPhase06Regressions:
         assert DailyPlanService is not None
 
     def test_prompts_active_capability(self):
-        """Phase 7 morning brief listed in active capabilities."""
+        """Fallback prompt should describe conversational-only mode."""
         from app.ai.prompts import get_system_prompt
         prompt = get_system_prompt()
-        assert "Phase 7" in prompt
+        assert "Mode Percakapan" in prompt or "percakapan" in prompt.lower()

@@ -22,6 +22,7 @@ import pytz
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from app.ai.base import LLMRateLimitError
 from app.core.config import settings
 from app.core.logging import get_logger
 
@@ -113,7 +114,10 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     Handle regular text messages (non-commands).
 
     Routes the message through the AI agent for tool-calling support.
-    Falls back to simple text generation if the agent is unavailable.
+    Falls back to simple text generation ONLY if the agent is not
+    configured (None). If the agent exists but fails, we show a clear
+    error instead of falling back to a tool-less LLM that would
+    generate misleading responses about database connectivity.
     """
     user = update.effective_user
     text = update.message.text
@@ -130,18 +134,32 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
             await _reply_safe(update.message, ai_response)
             logger.info(f"Agent response sent to user {user.id} ({len(ai_response)} chars)")
             return
+    except LLMRateLimitError as e:
+        logger.warning(f"Agent rate-limited for user {user.id}: {e}")
+        await update.message.reply_text(
+            "⏳ Maaf, server AI sedang sibuk. "
+            "Silakan coba lagi dalam 1-2 menit."
+        )
+        return
     except Exception as e:
         logger.error(f"Agent failed for user {user.id}: {e}")
-        # Fall through to simple AI
+        # Agent exists but failed — show a clear temporary error
+        # instead of falling back to a tool-less LLM that would
+        # generate misleading "not connected to database" responses.
+        await update.message.reply_text(
+            "⚠️ Maaf, terjadi gangguan sementara saat memproses permintaan kamu. "
+            "Silakan coba lagi dalam beberapa saat."
+        )
+        return
 
-    # Fallback: simple AI text generation (Phase 3)
+    # Fallback: Agent not configured (get_agent() returned None)
+    # Use simple AI text generation (Phase 3 — conversational only, no tools)
     try:
         from app.ai import get_llm_provider
 
         provider = get_llm_provider()
 
         if provider is not None:
-            # AI is available — generate response
             ai_response = await provider.generate_text(text)
             await _reply_safe(update.message, ai_response)
             logger.info(f"AI response sent to user {user.id} ({len(ai_response)} chars)")

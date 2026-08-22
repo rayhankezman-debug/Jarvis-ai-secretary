@@ -347,7 +347,7 @@ class TestPhase07Regressions:
         assert TaskService is not None
 
     def test_prompts_active_capability(self):
+        """Fallback prompt should describe conversational-only mode."""
         from app.ai.prompts import get_system_prompt
         prompt = get_system_prompt()
-        assert "Phase 8" in prompt
-        assert "aktif" in prompt.lower()
+        assert "Mode Percakapan" in prompt or "percakapan" in prompt.lower()

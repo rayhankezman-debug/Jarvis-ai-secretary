@@ -210,9 +210,9 @@ class TestPhase9AIIntegration:
         assert "statistik" in prompt.lower() or "produktivitas" in prompt.lower()
 
     def test_prompts_active_capability(self):
+        """Fallback prompt should describe conversational-only mode."""
         prompt = get_system_prompt()
-        assert "Phase 9" in prompt
-        assert "aktif" in prompt.lower()
+        assert "Mode Percakapan" in prompt or "percakapan" in prompt.lower()
 
 
 # ── Phase 0-8 Regression Tests ────────────────

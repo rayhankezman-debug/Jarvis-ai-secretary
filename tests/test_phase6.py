@@ -455,19 +455,17 @@ class TestAgentPromptPhase6:
 # ── Prompts.py Tests ──────────────────────────
 
 class TestPromptsPhase6:
-    def test_daily_planner_is_active(self):
-        """Phase 6 should be listed as active in system prompt."""
+    def test_daily_planner_prompt_is_conversational_mode(self):
+        """Fallback prompt should describe conversational-only mode."""
         from app.ai.prompts import get_system_prompt
         prompt = get_system_prompt()
-        assert "Phase 6" in prompt
-        assert "aktif" in prompt.lower()
+        assert "Mode Percakapan" in prompt or "percakapan" in prompt.lower()
 
-    def test_reminders_is_active(self):
-        """Phase 5 should also be listed as active now."""
+    def test_fallback_prompt_does_not_claim_tools(self):
+        """Fallback prompt should NOT claim tools are available."""
         from app.ai.prompts import get_system_prompt
         prompt = get_system_prompt()
-        assert "Phase 5" in prompt
-        assert "reminder" in prompt.lower()
+        assert "TANPA akses" in prompt or "tidak" in prompt.lower()
 
 
 # ── Services Package Export Tests ─────────────

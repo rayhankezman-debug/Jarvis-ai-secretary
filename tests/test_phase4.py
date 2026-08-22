@@ -465,7 +465,7 @@ class TestHandlerIntegration:
 
     @pytest.mark.asyncio
     async def test_handler_fallback_on_agent_error(self):
-        """If agent raises, handler should fall back gracefully."""
+        """If agent raises, handler should show clear temporary error."""
         from app.telegram.handlers import handle_text_message
 
         mock_update = self._make_mock_update()
@@ -473,11 +473,10 @@ class TestHandlerIntegration:
         mock_agent.process_message = AsyncMock(side_effect=LLMError("fail", provider="gemini"))
 
         with patch("app.ai.agent.get_agent", return_value=mock_agent):
-            with patch("app.ai.get_llm_provider", return_value=None):
-                await handle_text_message(mock_update, MagicMock())
+            await handle_text_message(mock_update, MagicMock())
 
         call_args = mock_update.message.reply_text.call_args
-        assert "Pesan diterima" in call_args[0][0] or "AI belum aktif" in call_args[0][0]
+        assert "gangguan sementara" in call_args[0][0] or "coba lagi" in call_args[0][0]
 
     @pytest.mark.asyncio
     async def test_handler_passes_user_id_to_agent(self):
@@ -625,11 +624,11 @@ class TestPhase03Regression:
         assert TaskStatus.PENDING.value == "pending"
         assert TaskPriority.MEDIUM.value == "medium"
 
-    def test_system_prompt_has_phase4_active(self):
+    def test_system_prompt_is_conversational_mode(self):
+        """Fallback prompt should describe conversational-only mode (no tools)."""
         from app.ai.prompts import get_system_prompt
         prompt = get_system_prompt()
-        assert "Phase 4" in prompt
-        assert "aktif" in prompt.lower()
+        assert "Mode Percakapan" in prompt or "percakapan" in prompt.lower()
 
     def test_conversational_prompt_unchanged(self):
         from app.ai.prompts import CONVERSATIONAL_PROMPT
