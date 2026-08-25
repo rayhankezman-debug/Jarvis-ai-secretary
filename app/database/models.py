@@ -147,3 +147,43 @@ class Task(Base, TimestampMixin):
     def mark_cancelled(self) -> None:
         """Mark this task as cancelled."""
         self.status = TaskStatus.CANCELLED
+
+
+class MessageRole(str, enum.Enum):
+    """
+    Role of the sender in a conversation message.
+    """
+    USER = "user"
+    MODEL = "model"
+
+
+class ConversationMessage(Base, TimestampMixin):
+    """
+    Stores short-term conversation history for context.
+    """
+    __tablename__ = "conversation_messages"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+    telegram_user_id: Mapped[int] = mapped_column(
+        BigInteger,
+        nullable=False,
+        index=True,
+        comment="Telegram user ID who owns this message",
+    )
+    role: Mapped[MessageRole] = mapped_column(
+        Enum(MessageRole, name="message_role", native_enum=False),
+        nullable=False,
+        comment="Role of the sender (user or model)",
+    )
+    content: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+        comment="The text content of the message",
+    )
+
+    def __repr__(self) -> str:
+        return f"<ConversationMessage(id={self.id}, role={self.role.value}, content='{self.content[:30]}...')>"

@@ -127,10 +127,19 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     # Try AI agent first (Phase 4+ — with tool calling)
     try:
         from app.ai.agent import get_agent
+        from app.services.chat_history_service import ChatHistoryService
+        from app.database.models import MessageRole
+
+        # Save user message to DB
+        await ChatHistoryService.add_message(user.id, MessageRole.USER, text)
 
         agent = get_agent()
         if agent is not None:
             ai_response = await agent.process_message(text, telegram_user_id=user.id)
+            
+            # Save assistant response to DB
+            await ChatHistoryService.add_message(user.id, MessageRole.MODEL, ai_response)
+            
             await _reply_safe(update.message, ai_response)
             logger.info(f"Agent response sent to user {user.id} ({len(ai_response)} chars)")
             return

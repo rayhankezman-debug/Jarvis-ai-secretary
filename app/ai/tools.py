@@ -69,10 +69,10 @@ TASK_TOOLS = types.Tool(
         types.FunctionDeclaration(
             name="list_tasks",
             description=(
-                "Tampilkan daftar tugas pengguna. "
-                "Gunakan saat pengguna ingin melihat tugas-tugas mereka. "
-                "Contoh: 'Apa saja tugas saya besok?', 'Lihat semua tugas', "
-                "'Tugas yang belum selesai'."
+                "Tampilkan daftar tugas pengguna atau cari tugas spesifik. "
+                "Gunakan saat pengguna ingin melihat tugas mereka atau mencari tugas berdasarkan judul/kata kunci (gunakan parameter title_search). "
+                "Contoh: 'Apa saja tugas saya besok?', 'Cari jadwal meeting', "
+                "'Di mana tugas database saya?', 'Tugas yang belum selesai'."
             ),
             parameters=types.Schema(
                 type="OBJECT",
@@ -175,12 +175,11 @@ TASK_TOOLS = types.Tool(
             name="generate_daily_plan",
             description=(
                 "Buat rencana/jadwal harian berdasarkan tugas pengguna. "
-                "Gunakan saat pengguna meminta jadwal, rencana, atau agenda harian. "
+                "Gunakan saat pengguna meminta jadwal, rencana, atau agenda harian secara umum. "
                 "Contoh: 'Jadwal hari ini', 'Buat jadwal besok', "
                 "'Apa agenda saya minggu depan?', 'Plan my day'. "
-                "JANGAN gunakan list_tasks untuk permintaan jadwal harian — "
-                "gunakan generate_daily_plan yang memberikan data terstruktur "
-                "termasuk tugas terjadwal, overdue, dan backlog."
+                "JANGAN gunakan generate_daily_plan untuk MENCARI tugas spesifik (contoh: 'kapan jadwal database?') — "
+                "gunakan list_tasks dengan parameter title_search untuk itu."
             ),
             parameters=types.Schema(
                 type="OBJECT",

@@ -171,7 +171,7 @@ def _format_tasks(tasks: list) -> list[dict]:
             "task_id": t.id,
             "title": t.title,
             "description": t.description,
-            "due_date": t.due_date.isoformat() if t.due_date else None,
+            "due_date": t.due_date.astimezone(TZ).isoformat() if t.due_date else None,
             "priority": t.priority.value,
             "status": t.status.value,
         })

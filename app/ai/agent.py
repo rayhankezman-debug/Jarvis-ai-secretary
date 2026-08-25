@@ -75,15 +75,18 @@ Berdasarkan waktu saat ini:
 5. Jika pengguna menyebut tugas tanpa ID, gunakan list_tasks dulu untuk menemukan ID-nya.
 6. Setelah operasi berhasil, konfirmasi dengan detail yang jelas.
 7. Format due_date dalam ISO 8601 dengan timezone +07:00 (contoh: 2026-08-15T07:00:00+07:00).
-8. Untuk permintaan jadwal/rencana/agenda harian, gunakan generate_daily_plan (BUKAN list_tasks).
+8. Untuk permintaan jadwal/rencana/agenda harian secara umum, gunakan generate_daily_plan (BUKAN list_tasks).
    Contoh: "Jadwal hari ini", "Buat jadwal besok", "Plan my day", "Agenda minggu depan".
-9. Saat memformat hasil generate_daily_plan, susun sebagai jadwal terstruktur yang rapi:
+9. Untuk mencari tugas spesifik berdasarkan judul atau kata kunci, HANYA gunakan list_tasks dengan parameter title_search.
+   Contoh: "Kapan jadwal database?", "Cari tugas presentasi".
+10. Saat memformat hasil generate_daily_plan, susun sebagai jadwal terstruktur yang rapi:
    - Tampilkan tugas terjadwal diurutkan berdasarkan waktu
    - Sebutkan tugas overdue yang perlu diperhatikan
    - Tampilkan tugas backlog (tanpa deadline) sebagai saran tambahan
    - Prioritaskan tugas urgent/high di bagian atas
    - Berikan saran produktivitas jika ada waktu kosong
-10. Untuk permintaan statistik, history, completion rate, atau produktivitas (contoh: "Produktivitas saya minggu ini", "Berapa task selesai?"), HANYA gunakan get_productivity_statistics. JANGAN gunakan list_tasks.
+   - JANGAN mengubah, mengarang, atau memodifikasi waktu (due_date) asli dari tugas. Jika tugas tidak memiliki waktu, jangan beri waktu fiktif.
+11. Untuk permintaan statistik, history, completion rate, atau produktivitas (contoh: "Produktivitas saya minggu ini", "Berapa task selesai?"), HANYA gunakan get_productivity_statistics. JANGAN gunakan list_tasks.
 
 ## Aturan Komunikasi
 1. Jawab dengan bahasa yang sama dengan pengguna.
@@ -141,6 +144,8 @@ class AgentService:
             LLMError: On unrecoverable API failure.
         """
         try:
+            from app.services.chat_history_service import ChatHistoryService
+
             config = types.GenerateContentConfig(
                 system_instruction=_get_agent_system_prompt(),
                 tools=[TASK_TOOLS],
@@ -149,13 +154,33 @@ class AgentService:
                 ),
             )
 
-            # Build initial conversation
-            contents = [
-                types.Content(
-                    role="user",
-                    parts=[types.Part.from_text(text=user_message)],
-                ),
-            ]
+            # Build conversation from history
+            recent_messages = await ChatHistoryService.get_recent_messages(telegram_user_id, limit=10)
+            contents = []
+
+            for msg in recent_messages:
+                contents.append(
+                    types.Content(
+                        role=msg.role.value,
+                        parts=[types.Part.from_text(text=msg.content)],
+                    )
+                )
+
+            # Fallback for tests or direct calls where the handler didn't save the message yet
+            if not contents:
+                contents = [
+                    types.Content(
+                        role="user",
+                        parts=[types.Part.from_text(text=user_message)],
+                    ),
+                ]
+            elif contents[-1].parts[0].text != user_message:
+                contents.append(
+                    types.Content(
+                        role="user",
+                        parts=[types.Part.from_text(text=user_message)],
+                    )
+                )
 
             # Multi-turn tool calling loop
             for turn in range(MAX_TOOL_TURNS):
@@ -186,8 +211,12 @@ class AgentService:
                             telegram_user_id=telegram_user_id,
                         )
 
-                        # Preserve the model's full response (including
-                        # thought_signature) then append function result
+                        # Append the model's FULL response object (candidate.content)
+                        # to preserve thought_signature fields on functionCall parts.
+                        # Gemini 3 models require thought_signature to be passed back
+                        # in the conversation history — stripping or reconstructing
+                        # the Content/Part objects will cause a 400 error.
+                        # See: https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures
                         contents.append(candidate.content)
                         contents.append(
                             types.Content(

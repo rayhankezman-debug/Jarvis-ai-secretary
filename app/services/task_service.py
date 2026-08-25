@@ -99,7 +99,7 @@ class TaskService:
                     "task_id": task.id,
                     "title": task.title,
                     "description": task.description,
-                    "due_date": task.due_date.isoformat() if task.due_date else None,
+                    "due_date": task.due_date.astimezone(TZ).isoformat() if task.due_date else None,
                     "priority": task.priority.value,
                     "status": task.status.value,
                 }
@@ -182,11 +182,11 @@ class TaskService:
                         "task_id": t.id,
                         "title": t.title,
                         "description": t.description,
-                        "due_date": t.due_date.isoformat() if t.due_date else None,
+                        "due_date": t.due_date.astimezone(TZ).isoformat() if t.due_date else None,
                         "priority": t.priority.value,
                         "status": t.status.value,
-                        "completed_at": t.completed_at.isoformat() if t.completed_at else None,
-                        "created_at": t.created_at.isoformat() if t.created_at else None,
+                        "completed_at": t.completed_at.astimezone(TZ).isoformat() if t.completed_at else None,
+                        "created_at": t.created_at.astimezone(TZ).isoformat() if t.created_at else None,
                     })
 
                 return {"success": True, "tasks": task_list, "count": len(task_list)}
@@ -265,7 +265,7 @@ class TaskService:
                     "task_id": task.id,
                     "title": task.title,
                     "description": task.description,
-                    "due_date": task.due_date.isoformat() if task.due_date else None,
+                    "due_date": task.due_date.astimezone(TZ).isoformat() if task.due_date else None,
                     "priority": task.priority.value,
                     "status": task.status.value,
                 }
@@ -323,7 +323,7 @@ class TaskService:
                     "task_id": task.id,
                     "title": task.title,
                     "status": task.status.value,
-                    "completed_at": task.completed_at.isoformat(),
+                    "completed_at": task.completed_at.astimezone(TZ).isoformat(),
                 }
 
         except Exception as e:
