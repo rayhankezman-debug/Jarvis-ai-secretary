@@ -23,7 +23,7 @@ from google import genai
 from google.genai import types
 
 from app.ai.base import LLMError, LLMRateLimitError
-from app.ai.tools import TASK_TOOLS, execute_tool
+from app.ai.tools import TASK_TOOLS, MEMORY_TOOLS, execute_tool
 from app.core.config import settings
 from app.core.logging import get_logger
 
@@ -68,7 +68,7 @@ Berdasarkan waktu saat ini:
 - "minggu depan" = tanggal yang sama minggu berikutnya
 
 ## Aturan Penggunaan Tools
-1. Gunakan tools HANYA ketika pengguna meminta operasi terkait tugas/task.
+1. Gunakan tools jika diperlukan untuk operasi terkait tugas/task ATAU long-term memory pengguna.
 2. Untuk percakapan biasa, sapaan, pertanyaan umum — jawab langsung TANPA memanggil tools.
 3. Saat membuat tugas, konversikan semua referensi waktu relatif ke format ISO 8601 absolut.
 4. Jika informasi penting kurang (misal judul tugas tidak jelas), tanyakan klarifikasi.
@@ -87,6 +87,18 @@ Berdasarkan waktu saat ini:
    - Berikan saran produktivitas jika ada waktu kosong
    - JANGAN mengubah, mengarang, atau memodifikasi waktu (due_date) asli dari tugas. Jika tugas tidak memiliki waktu, jangan beri waktu fiktif.
 11. Untuk permintaan statistik, history, completion rate, atau produktivitas (contoh: "Produktivitas saya minggu ini", "Berapa task selesai?"), HANYA gunakan get_productivity_statistics. JANGAN gunakan list_tasks.
+
+## Aturan Long-Term Memory (PENTING)
+1. Simpan fakta permanen/jangka panjang tentang pengguna menggunakan `save_memory` (contoh: preferensi, nama, kebiasaan belajar).
+2. JANGAN menyimpan task, jadwal, atau aktivitas sementara sebagai memori (jadikan sebagai task biasa).
+3. Jika pengguna memberikan fakta atau preferensi baru yang layak diingat, gunakan `save_memory`.
+4. Jika kamu membutuhkan informasi personal pengguna untuk memberikan respons terbaik yang tidak ada di context, gunakan `search_memory` terlebih dahulu.
+5. Jika pengguna menyatakan bahwa fakta atau preferensinya berubah, WAJIB:
+   a. Gunakan `search_memory` untuk mencari fakta lama.
+   b. Jika fakta lama ditemukan, gunakan `update_memory` menggunakan memory_id yang ditemukan.
+   c. JANGAN menggunakan `save_memory` untuk membuat duplikat.
+6. Jika pengguna secara eksplisit meminta kamu melupakan sesuatu, WAJIB gunakan `search_memory` terlebih dahulu untuk mendapatkan memory_id, lalu gunakan `delete_memory`.
+7. Setelah memory berhasil disimpan, diperbarui, atau dihapus, konfirmasi secara singkat kepada pengguna.
 
 ## Aturan Komunikasi
 1. Jawab dengan bahasa yang sama dengan pengguna.
@@ -148,7 +160,7 @@ class AgentService:
 
             config = types.GenerateContentConfig(
                 system_instruction=_get_agent_system_prompt(),
-                tools=[TASK_TOOLS],
+                tools=[TASK_TOOLS, MEMORY_TOOLS],
                 automatic_function_calling=types.AutomaticFunctionCallingConfig(
                     disable=True,
                 ),

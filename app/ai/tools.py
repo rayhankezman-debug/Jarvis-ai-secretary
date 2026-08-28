@@ -20,6 +20,7 @@ from app.core.logging import get_logger
 from app.services.task_service import TaskService
 from app.services.daily_plan_service import DailyPlanService
 from app.services.history_service import HistoryService
+from app.services.memory_service import MemoryService
 
 logger = get_logger(__name__)
 
@@ -233,6 +234,98 @@ TASK_TOOLS = types.Tool(
 )
 
 
+MEMORY_TOOLS = types.Tool(
+    function_declarations=[
+        types.FunctionDeclaration(
+            name="save_memory",
+            description=(
+                "Simpan fakta jangka panjang atau informasi personal tentang pengguna. "
+                "Gunakan saat pengguna membagikan preferensi, rutinitas, nama, kesukaan, atau identitas yang layak diingat selamanya. "
+                "JANGAN menyimpan tugas/jadwal di sini (gunakan create_task). "
+                "Contoh: 'Nama saya Budi', 'Saya suka kopi', 'Saya kerja dari jam 9-5'."
+            ),
+            parameters=types.Schema(
+                type="OBJECT",
+                properties={
+                    "category": types.Schema(
+                        type="STRING",
+                        description="Kategori fakta: identity, preference, habit, atau other.",
+                        enum=["identity", "preference", "habit", "other"],
+                    ),
+                    "fact": types.Schema(
+                        type="STRING",
+                        description="Teks fakta spesifik (contoh: 'User suka kopi tanpa gula'). Harus jelas tanpa merujuk 'ini' atau 'itu'.",
+                    ),
+                },
+                required=["category", "fact"],
+            ),
+        ),
+        types.FunctionDeclaration(
+            name="search_memory",
+            description=(
+                "Cari fakta personal atau preferensi pengguna di memori jangka panjang. "
+                "Gunakan ketika kamu butuh informasi personal (misal: nama user, kesukaannya) yang belum ada di context saat ini. "
+                "Contoh: 'Saya harus bikin rencana seperti biasa?' (cari 'biasa' atau habit)."
+            ),
+            parameters=types.Schema(
+                type="OBJECT",
+                properties={
+                    "query": types.Schema(
+                        type="STRING",
+                        description="Kata kunci pencarian (contoh: 'kopi', 'nama'). Biarkan kosong jika ingin mencari berdasarkan kategori saja.",
+                    ),
+                    "category_filter": types.Schema(
+                        type="STRING",
+                        description="Filter pencarian berdasarkan kategori: identity, preference, habit, other (opsional).",
+                        enum=["identity", "preference", "habit", "other"],
+                    ),
+                },
+            ),
+        ),
+        types.FunctionDeclaration(
+            name="update_memory",
+            description=(
+                "Perbarui fakta yang sudah ada di memori jangka panjang (misal jika preferensi pengguna berubah). "
+                "Hanya gunakan ini setelah memanggil search_memory untuk mendapatkan memory_id. "
+                "Contoh: 'Saya sudah nggak suka kopi' (update memori lama)."
+            ),
+            parameters=types.Schema(
+                type="OBJECT",
+                properties={
+                    "memory_id": types.Schema(
+                        type="INTEGER",
+                        description="ID memori yang akan diupdate. Wajib.",
+                    ),
+                    "new_fact": types.Schema(
+                        type="STRING",
+                        description="Fakta baru yang menggantikan yang lama.",
+                    ),
+                },
+                required=["memory_id", "new_fact"],
+            ),
+        ),
+        types.FunctionDeclaration(
+            name="delete_memory",
+            description=(
+                "Hapus fakta dari memori jangka panjang. "
+                "Gunakan saat pengguna secara eksplisit meminta kamu melupakan sesuatu. "
+                "Hanya gunakan ini setelah memanggil search_memory untuk mendapatkan memory_id."
+            ),
+            parameters=types.Schema(
+                type="OBJECT",
+                properties={
+                    "memory_id": types.Schema(
+                        type="INTEGER",
+                        description="ID memori yang akan dihapus. Wajib.",
+                    ),
+                },
+                required=["memory_id"],
+            ),
+        ),
+    ]
+)
+
+
 # ──────────────────────────────────────────────
 # Tool Execution
 # ──────────────────────────────────────────────
@@ -318,6 +411,35 @@ async def execute_tool(
                 telegram_user_id=telegram_user_id,
                 start_date=tool_args.get("start_date"),
                 end_date=tool_args.get("end_date"),
+            )
+
+        # Memory Tools
+        elif tool_name == "save_memory":
+            return await MemoryService.save_memory(
+                telegram_user_id=telegram_user_id,
+                category=tool_args.get("category", "other"),
+                fact=tool_args.get("fact", ""),
+            )
+
+        elif tool_name == "search_memory":
+            results = await MemoryService.search_memory(
+                telegram_user_id=telegram_user_id,
+                query=tool_args.get("query", ""),
+                category=tool_args.get("category_filter"),
+            )
+            return {"success": True, "results": results, "count": len(results)}
+
+        elif tool_name == "update_memory":
+            return await MemoryService.update_memory(
+                telegram_user_id=telegram_user_id,
+                memory_id=_safe_int(tool_args.get("memory_id")),
+                new_fact=tool_args.get("new_fact", ""),
+            )
+
+        elif tool_name == "delete_memory":
+            return await MemoryService.delete_memory(
+                telegram_user_id=telegram_user_id,
+                memory_id=_safe_int(tool_args.get("memory_id")),
             )
 
         else:

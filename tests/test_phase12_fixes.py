@@ -185,6 +185,10 @@ class TestAgentThoughtSignaturePreservation:
             "app.ai.tools.TaskService.list_tasks",
             new_callable=AsyncMock,
             return_value={"success": True, "tasks": [], "count": 0},
+        ), patch(
+            "app.services.chat_history_service.ChatHistoryService.get_recent_messages",
+            new_callable=AsyncMock,
+            return_value=[],
         ):
             await agent.process_message("Lihat tugas saya", telegram_user_id=12345)
 
@@ -223,6 +227,10 @@ class TestAgentThoughtSignaturePreservation:
             "app.ai.tools.TaskService.create_task",
             new_callable=AsyncMock,
             return_value={"success": True, "task_id": 1, "title": "Test"},
+        ), patch(
+            "app.services.chat_history_service.ChatHistoryService.get_recent_messages",
+            new_callable=AsyncMock,
+            return_value=[],
         ):
             await agent.process_message("Buat tugas test", telegram_user_id=12345)
 
@@ -263,13 +271,16 @@ class TestAgentThoughtSignaturePreservation:
             "app.ai.tools.TaskService.list_tasks",
             new_callable=AsyncMock,
             return_value={"success": True, "tasks": [{"task_id": 1}], "count": 1},
+        ), patch(
+            "app.ai.tools.TaskService.complete_task",
+            new_callable=AsyncMock,
+            return_value={"success": True, "task_id": 1, "status": "completed"},
+        ), patch(
+            "app.services.chat_history_service.ChatHistoryService.get_recent_messages",
+            new_callable=AsyncMock,
+            return_value=[],
         ):
-            with patch(
-                "app.ai.tools.TaskService.complete_task",
-                new_callable=AsyncMock,
-                return_value={"success": True, "task_id": 1, "status": "completed"},
-            ):
-                result = await agent.process_message("Selesaikan tugas", telegram_user_id=12345)
+            result = await agent.process_message("Selesaikan tugas", telegram_user_id=12345)
 
         assert result == "Done!"
 

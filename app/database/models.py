@@ -187,3 +187,36 @@ class ConversationMessage(Base, TimestampMixin):
 
     def __repr__(self) -> str:
         return f"<ConversationMessage(id={self.id}, role={self.role.value}, content='{self.content[:30]}...')>"
+
+
+class LongTermMemory(Base, TimestampMixin):
+    """
+    Stores long-term memory/facts about the user.
+    """
+    __tablename__ = "long_term_memories"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+    telegram_user_id: Mapped[int] = mapped_column(
+        BigInteger,
+        nullable=False,
+        index=True,
+        comment="Telegram user ID who owns this memory",
+    )
+    category: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        index=True,
+        comment="Category of the memory (e.g. identity, preference, habit, other)",
+    )
+    fact: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+        comment="The actual fact/memory stored",
+    )
+
+    def __repr__(self) -> str:
+        return f"<LongTermMemory(id={self.id}, category='{self.category}', fact='{self.fact[:30]}...')>"
