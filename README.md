@@ -524,7 +524,7 @@ JARVIS/
 │   └── env.py                       # Async migration environment
 ├── scripts/
 │   └── start.sh                     # Docker entrypoint (migrations + uvicorn)
-├── tests/                           # 369 tests across 17 test files
+├── tests/                           # 391 tests across 18 test files
 │   ├── conftest.py
 │   └── test_*.py
 ├── .dockerignore
