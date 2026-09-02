@@ -380,3 +380,105 @@ class TaskService:
         except Exception as e:
             logger.error(f"Failed to cancel task {task_id} for user {telegram_user_id}: {e}")
             return {"success": False, "error": "Gagal membatalkan tugas. Silakan coba lagi."}
+
+    @staticmethod
+    async def batch_cancel_tasks(
+        telegram_user_id: int,
+        task_ids: list[int],
+    ) -> dict:
+        """
+        Cancel multiple tasks at once.
+
+        Only cancels tasks that:
+        - Belong to the specified user (telegram_user_id isolation)
+        - Currently have status PENDING or IN_PROGRESS
+        - Exist in the database
+
+        Args:
+            telegram_user_id: Owner's Telegram user ID.
+            task_ids: List of task IDs to cancel.
+
+        Returns:
+            Dict with success status, cancelled count, and per-task details.
+        """
+        if not task_ids:
+            return {
+                "success": False,
+                "error": "Daftar task_ids kosong. Tidak ada tugas yang dibatalkan.",
+                "cancelled_count": 0,
+                "cancelled_tasks": [],
+                "skipped_tasks": [],
+                "not_found_tasks": [],
+            }
+
+        # Deduplicate and validate
+        unique_ids = list(dict.fromkeys(tid for tid in task_ids if tid))
+
+        if not unique_ids:
+            return {
+                "success": False,
+                "error": "Tidak ada task_id valid yang diberikan.",
+                "cancelled_count": 0,
+                "cancelled_tasks": [],
+                "skipped_tasks": [],
+                "not_found_tasks": [],
+            }
+
+        try:
+            async with get_db_session() as session:
+                # Fetch all tasks matching IDs for this user only
+                result = await session.execute(
+                    select(Task).where(
+                        and_(
+                            Task.id.in_(unique_ids),
+                            Task.telegram_user_id == telegram_user_id,
+                        )
+                    )
+                )
+                tasks = result.scalars().all()
+
+                found_ids = {t.id for t in tasks}
+                not_found_ids = set(unique_ids) - found_ids
+
+                cancelled = []
+                skipped = []
+
+                for task in tasks:
+                    if task.status in (TaskStatus.COMPLETED, TaskStatus.CANCELLED):
+                        skipped.append({
+                            "task_id": task.id,
+                            "title": task.title,
+                            "reason": f"Status sudah '{task.status.value}'.",
+                        })
+                    else:
+                        task.status = TaskStatus.CANCELLED
+                        cancelled.append({
+                            "task_id": task.id,
+                            "title": task.title,
+                        })
+
+                await session.flush()
+
+                not_found = [
+                    {"task_id": tid, "reason": "Tugas tidak ditemukan atau bukan milik pengguna ini."}
+                    for tid in not_found_ids
+                ]
+
+                return {
+                    "success": len(cancelled) > 0,
+                    "cancelled_count": len(cancelled),
+                    "cancelled_tasks": cancelled,
+                    "skipped_tasks": skipped,
+                    "not_found_tasks": not_found,
+                }
+
+        except Exception as e:
+            logger.error(f"Failed to batch cancel tasks for user {telegram_user_id}: {e}")
+            return {
+                "success": False,
+                "error": "Gagal membatalkan tugas secara batch. Silakan coba lagi.",
+                "cancelled_count": 0,
+                "cancelled_tasks": [],
+                "skipped_tasks": [],
+                "not_found_tasks": [],
+            }

@@ -109,8 +109,8 @@ class TestDailyPlanToolDefinition:
         assert "jadwal" in desc or "rencana" in desc
 
     def test_total_tool_count_is_seven(self):
-        """With Phase 9 we should have 7 tools total."""
-        assert len(TASK_TOOLS.function_declarations) == 7
+        """With batch_cancel_tasks we should have 8 tools total."""
+        assert len(TASK_TOOLS.function_declarations) == 8
 
 
 # ── Tool Execution Routing Tests ──────────────

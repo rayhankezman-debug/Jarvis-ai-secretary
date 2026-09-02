@@ -156,10 +156,11 @@ TASK_TOOLS = types.Tool(
         types.FunctionDeclaration(
             name="cancel_task",
             description=(
-                "Batalkan tugas. "
-                "Gunakan saat pengguna ingin membatalkan tugas. "
+                "Batalkan SATU tugas. "
+                "Gunakan saat pengguna ingin membatalkan satu tugas spesifik. "
                 "Contoh: 'Batalkan tugas belajar malam ini'. "
-                "Perlu task_id — jika belum tahu, gunakan list_tasks dulu."
+                "Perlu task_id — jika belum tahu, gunakan list_tasks dulu. "
+                "Untuk membatalkan BANYAK tugas sekaligus, gunakan batch_cancel_tasks."
             ),
             parameters=types.Schema(
                 type="OBJECT",
@@ -170,6 +171,28 @@ TASK_TOOLS = types.Tool(
                     ),
                 },
                 required=["task_id"],
+            ),
+        ),
+        types.FunctionDeclaration(
+            name="batch_cancel_tasks",
+            description=(
+                "Batalkan BANYAK tugas sekaligus. "
+                "Gunakan saat pengguna ingin membatalkan, menghapus, atau membersihkan banyak tugas. "
+                "Contoh: 'Bersihkan tugas yang terlambat', 'Batalkan tugas 1, 2, dan 3', "
+                "'Hapus semua tugas overdue'. "
+                "WAJIB panggil list_tasks terlebih dahulu untuk mendapatkan task_id yang benar. "
+                "JANGAN mengarang task_id."
+            ),
+            parameters=types.Schema(
+                type="OBJECT",
+                properties={
+                    "task_ids": types.Schema(
+                        type="ARRAY",
+                        items=types.Schema(type="INTEGER"),
+                        description="Daftar ID tugas yang ingin dibatalkan. Wajib diisi.",
+                    ),
+                },
+                required=["task_ids"],
             ),
         ),
         types.FunctionDeclaration(
@@ -398,6 +421,16 @@ async def execute_tool(
             return await TaskService.cancel_task(
                 telegram_user_id=telegram_user_id,
                 task_id=_safe_int(tool_args.get("task_id")),
+            )
+
+        elif tool_name == "batch_cancel_tasks":
+            raw_ids = tool_args.get("task_ids", [])
+            if not isinstance(raw_ids, list):
+                raw_ids = [raw_ids]
+            task_ids = [_safe_int(x) for x in raw_ids if _safe_int(x, 0) > 0]
+            return await TaskService.batch_cancel_tasks(
+                telegram_user_id=telegram_user_id,
+                task_ids=task_ids,
             )
 
         elif tool_name == "generate_daily_plan":
